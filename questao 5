@@ -1,0 +1,59 @@
+#include <stdio.h>
+#include <string.h>
+
+typedef struct {
+    int id;
+    char modelo[50];
+    char placa[10];
+    int ano;
+} Veiculo;
+
+void adicionarVeiculo(FILE *arquivo) {
+    Veiculo veiculo;
+    printf("Digite o ID do veículo: ");
+    scanf("%d", &veiculo.id);
+    getchar(); // Limpar buffer
+    printf("Digite o modelo do veículo: ");
+    fgets(veiculo.modelo, 50, stdin);
+    veiculo.modelo[strcspn(veiculo.modelo, "\n")] = 0;
+    printf("Digite a placa do veículo: ");
+    fgets(veiculo.placa, 10, stdin);
+    veiculo.placa[strcspn(veiculo.placa, "\n")] = 0;
+    printf("Digite o ano de fabricação: ");
+    scanf("%d", &veiculo.ano);
+    
+    fwrite(&veiculo, sizeof(Veiculo), 1, arquivo);
+}
+
+void listarVeiculos(FILE *arquivo) {
+    Veiculo veiculo;
+    rewind(arquivo);
+    while (fread(&veiculo, sizeof(Veiculo), 1, arquivo)) {
+        printf("ID: %d, Modelo: %s, Placa: %s, Ano: %d\n", veiculo.id, veiculo.modelo, veiculo.placa, veiculo.ano);
+    }
+}
+
+int main() {
+    FILE *arquivo = fopen("veiculos.dat", "ab+");
+    if (!arquivo) {
+        printf("Erro ao abrir o arquivo.\n");
+        return 1;
+    }
+    
+    int opcao;
+    do {
+        printf("\nMenu:\n");
+        printf("1. Adicionar veículo\n");
+        printf("2. Listar veículos\n");
+        printf("0. Sair\n");
+        printf("Escolha uma opção: ");
+        scanf("%d", &opcao);
+        getchar(); // Limpar buffer
+        switch (opcao) {
+            case 1:
+                adicionarVeiculo(arquivo);
+                break;
+            case 2:
+                listarVeiculos(arquivo);
+                break;
+
