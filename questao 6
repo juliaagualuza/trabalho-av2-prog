@@ -1,0 +1,217 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define ARQUIVO "cidades.txt"
+#define ARQUIVO_TEMP "temp.txt"
+
+// Estrutura para armazenar informações sobre uma cidade
+typedef struct {
+    int codigo;
+    char nome[50];
+    char estado[30];
+    int populacao;
+} Cidade;
+
+// Funções de manipulação de cidades
+void incluirCidade();
+void alterarCidade();
+void excluirCidade();
+void consultarCidade();
+void listarCidades();
+void exibirMenu();
+
+// Função principal
+int main() {
+    int opcao;
+    do {
+        exibirMenu();
+        printf("\nEscolha uma opção: ");
+        scanf("%d", &opcao);
+        getchar(); // Limpar o buffer do teclado após a leitura de um número
+        switch (opcao) {
+            case 1: incluirCidade(); break;
+            case 2: alterarCidade(); break;
+            case 3: excluirCidade(); break;
+            case 4: consultarCidade(); break;
+            case 5: listarCidades(); break;
+            case 0: printf("Encerrando o programa.\n"); break;
+            default: printf("Opção inválida! Tente novamente.\n");
+        }
+    } while (opcao != 0);
+
+    return 0;
+}
+
+// Função para exibir o menu
+void exibirMenu() {
+    printf("\n=== Menu de Cadastro de Cidades ===\n");
+    printf("1. Incluir Cidade\n");
+    printf("2. Alterar Cidade\n");
+    printf("3. Excluir Cidade\n");
+    printf("4. Consultar Cidade\n");
+    printf("5. Listar Cidades\n");
+    printf("0. Sair\n");
+}
+
+// Função para incluir uma cidade no arquivo
+void incluirCidade() {
+    FILE *arquivo = fopen(ARQUIVO, "a");  // Abrir arquivo para adicionar dados
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo para escrita!\n");
+        return;
+    }
+
+    Cidade cidade;
+    printf("\nInforme os dados da cidade:\n");
+    printf("Código: ");
+    scanf("%d", &cidade.codigo);
+    getchar();  // Limpar o buffer após a leitura de um número
+    printf("Nome: ");
+    fgets(cidade.nome, 50, stdin);
+    cidade.nome[strcspn(cidade.nome, "\n")] = '\0';  // Remover a nova linha
+    printf("Estado: ");
+    fgets(cidade.estado, 30, stdin);
+    cidade.estado[strcspn(cidade.estado, "\n")] = '\0';
+    printf("População: ");
+    scanf("%d", &cidade.populacao);
+
+    fwrite(&cidade, sizeof(Cidade), 1, arquivo);  // Escrever a cidade no arquivo
+    fclose(arquivo);
+
+    printf("Cidade cadastrada com sucesso!\n");
+}
+
+// Função para alterar os dados de uma cidade
+void alterarCidade() {
+    FILE *arquivo = fopen(ARQUIVO, "r+");  // Abrir arquivo para leitura e escrita
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo!\n");
+        return;
+    }
+
+    int codigo;
+    printf("Digite o código da cidade que deseja alterar: ");
+    scanf("%d", &codigo);
+
+    Cidade cidade;
+    int encontrado = 0;
+    while (fread(&cidade, sizeof(Cidade), 1, arquivo)) {
+        if (cidade.codigo == codigo) {
+            encontrado = 1;
+            printf("Cidade encontrada! Insira os novos dados.\n");
+            printf("Novo nome: ");
+            getchar();  // Limpar o buffer do teclado
+            fgets(cidade.nome, 50, stdin);
+            cidade.nome[strcspn(cidade.nome, "\n")] = '\0';
+            printf("Novo estado: ");
+            fgets(cidade.estado, 30, stdin);
+            cidade.estado[strcspn(cidade.estado, "\n")] = '\0';
+            printf("Nova população: ");
+            scanf("%d", &cidade.populacao);
+
+            // Reposiciona o cursor do arquivo para o início do registro e regrava os dados alterados
+            fseek(arquivo, -sizeof(Cidade), SEEK_CUR);
+            fwrite(&cidade, sizeof(Cidade), 1, arquivo);
+            break;
+        }
+    }
+
+    if (!encontrado) {
+        printf("Cidade com código %d não encontrada.\n", codigo);
+    } else {
+        printf("Dados da cidade alterados com sucesso!\n");
+    }
+
+    fclose(arquivo);
+}
+
+// Função para excluir uma cidade do arquivo
+void excluirCidade() {
+    FILE *arquivo = fopen(ARQUIVO, "r");
+    FILE *temp = fopen(ARQUIVO_TEMP, "w");  // Arquivo temporário para armazenar os dados restantes
+    if (arquivo == NULL || temp == NULL) {
+        printf("Erro ao abrir os arquivos!\n");
+        return;
+    }
+
+    int codigo;
+    printf("Digite o código da cidade a ser excluída: ");
+    scanf("%d", &codigo);
+
+    Cidade cidade;
+    int encontrado = 0;
+    while (fread(&cidade, sizeof(Cidade), 1, arquivo)) {
+        if (cidade.codigo != codigo) {
+            fwrite(&cidade, sizeof(Cidade), 1, temp);  // Grava no arquivo temporário se não for a cidade a ser excluída
+        } else {
+            encontrado = 1;
+        }
+    }
+
+    if (!encontrado) {
+        printf("Cidade com código %d não encontrada.\n", codigo);
+    } else {
+        printf("Cidade excluída com sucesso!\n");
+    }
+
+    fclose(arquivo);
+    fclose(temp);
+
+    remove(ARQUIVO);  // Remove o arquivo original
+    rename(ARQUIVO_TEMP, ARQUIVO);  // Renomeia o arquivo temporário para o nome original
+}
+
+// Função para consultar os dados de uma cidade
+void consultarCidade() {
+    FILE *arquivo = fopen(ARQUIVO, "r");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo!\n");
+        return;
+    }
+
+    int codigo;
+    printf("Digite o código da cidade a ser consultada: ");
+    scanf("%d", &codigo);
+
+    Cidade cidade;
+    int encontrado = 0;
+    while (fread(&cidade, sizeof(Cidade), 1, arquivo)) {
+        if (cidade.codigo == codigo) {
+            encontrado = 1;
+            printf("Cidade encontrada!\n");
+            printf("Código: %d\n", cidade.codigo);
+            printf("Nome: %s\n", cidade.nome);
+            printf("Estado: %s\n", cidade.estado);
+            printf("População: %d\n", cidade.populacao);
+            break;
+        }
+    }
+
+    if (!encontrado) {
+        printf("Cidade com código %d não encontrada.\n", codigo);
+    }
+
+    fclose(arquivo);
+}
+
+// Função para listar todas as cidades cadastradas
+void listarCidades() {
+    FILE *arquivo = fopen(ARQUIVO, "r");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo!\n");
+        return;
+    }
+
+    Cidade cidade;
+    printf("\nLista de Cidades:\n");
+    while (fread(&cidade, sizeof(Cidade), 1, arquivo)) {
+        printf("Código: %d\n", cidade.codigo);
+        printf("Nome: %s\n", cidade.nome);
+        printf("Estado: %s\n", cidade.estado);
+        printf("População: %d\n\n", cidade.populacao);
+    }
+
+    fclose(arquivo);
+}
+
