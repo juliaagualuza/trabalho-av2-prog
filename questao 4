@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <string.h>
+
+typedef struct {
+    int id;
+    char titulo[50];
+    char genero[20];
+    int ano;
+} Filme;
+
+void adicionarFilme(FILE *arquivo) {
+    Filme filme;
+    printf("Digite o ID do filme: ");
+    scanf("%d", &filme.id);
+    getchar(); // Limpar buffer
+    printf("Digite o título do filme: ");
+    fgets(filme.titulo, 50, stdin);
+    filme.titulo[strcspn(filme.titulo, "\n")] = 0;
+    printf("Digite o gênero do filme: ");
+    fgets(filme.genero, 20, stdin);
+    filme.genero[strcspn(filme.genero, "\n")] = 0;
+    printf("Digite o ano de lançamento: ");
+    scanf("%d", &filme.ano);
+    
+    fwrite(&filme, sizeof(Filme), 1, arquivo);
+}
+
+void listarFilmes(FILE *arquivo) {
+    Filme filme;
+    rewind(arquivo); 
+    while (fread(&filme, sizeof(Filme), 1, arquivo)) {
+        printf("ID: %d, Título: %s, Gênero: %s, Ano: %d\n", filme.id, filme.titulo, filme.genero, filme.ano);
+    }
+}
+
+void consultarFilme(FILE *arquivo, int id) {
+    Filme filme;
+    rewind(arquivo);     while (fread(&filme, sizeof(Filme), 1, arquivo)) {
+        if (filme.id == id) {
+            printf("Filme encontrado: ID: %d, Título: %s, Gênero: %s, Ano: %d\n", filme.id, filme.titulo, filme.genero, filme.ano);
+            return;
+        }
+    }
+    printf("Filme com ID %d não encontrado.\n", id);
+}
+
+void alterarFilme(FILE *arquivo, int id) {
+    Filme filme;
+    FILE *temp = fopen("temp.dat", "wb");
+    if (!temp) {
+        printf("Erro ao abrir arquivo temporário.\n");
+        return;
+    }
+    
+    rewind(arquivo);
+    int found = 0;
+    while (fread(&filme, sizeof(Filme), 1, arquivo)) {
+        if (filme.id == id) {
+            found = 1;
+            printf("Digite o novo título: ");
+            getchar(); // Limpar buffer
+            fgets(filme.titulo, 50, s
+
