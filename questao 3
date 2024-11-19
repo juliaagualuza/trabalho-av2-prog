@@ -1,0 +1,71 @@
+#include <stdio.h>
+#include <string.h>
+
+typedef struct {
+    int codigo;
+    char titulo[50];
+    char autor[50];
+    int ano;
+} Livro;
+
+void adicionarLivro(FILE *arquivo) {
+    Livro livro;
+    printf("Digite o código do livro: ");
+    scanf("%d", &livro.codigo);
+    getchar(); // Limpar buffer
+    printf("Digite o título do livro: ");
+    fgets(livro.titulo, 50, stdin);
+    livro.titulo[strcspn(livro.titulo, "\n")] = 0;
+    printf("Digite o autor do livro: ");
+    fgets(livro.autor, 50, stdin);
+    livro.autor[strcspn(livro.autor, "\n")] = 0;
+    printf("Digite o ano de publicação: ");
+    scanf("%d", &livro.ano);
+    
+    fwrite(&livro, sizeof(Livro), 1, arquivo);
+}
+
+void listarLivros(FILE *arquivo) {
+    Livro livro;
+    rewind(arquivo);
+    while (fread(&livro, sizeof(Livro), 1, arquivo)) {
+        printf("Código: %d, Título: %s, Autor: %s, Ano: %d\n", livro.codigo, livro.titulo, livro.autor, livro.ano);
+    }
+}
+
+int main() {
+    FILE *arquivo = fopen("livros.dat", "ab+");
+    if (!arquivo) {
+        printf("Erro ao abrir o arquivo.\n");
+        return 1;
+    }
+    
+    int opcao;
+    do {
+        printf("\nMenu:\n");
+        printf("1. Adicionar livro\n");
+        printf("2. Listar livros\n");
+        printf("0. Sair\n");
+        printf("Escolha uma opção: ");
+        scanf("%d", &opcao);
+        getchar(); // Limpar buffer
+        switch (opcao) {
+            case 1:
+                adicionarLivro(arquivo);
+                break;
+            case 2:
+                listarLivros(arquivo);
+                break;
+            case 0:
+                printf("Saindo...\n");
+                break;
+            default:
+                printf("Opção inválida!\n");
+        }
+    } while (opcao != 0);
+    
+    fclose(arquivo);
+    return 0;
+}
+
+
